@@ -1,0 +1,16 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.example.horizonbrowser
+productName: Horizon Browser
+files:
+  - filter:
+      - main.js
+      - index.html
+      - node_modules/
+mac:
+  icon: assets/icon.icns
+  target:
+    - dmg
+    - zip
+electronVersion: 33.2.0

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horizon Browser</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background-color: #f1f3f4; color: #333; }
+
+    /* Tabs bar */
+    #tabs-bar {
+      display: flex;
+      align-items: center;
+      background-color: #e0e0e0;
+      padding: 5px;
+      height: 35px;
+      overflow-x: auto;
+      border-bottom: 1px solid #ccc;
+    }
+    .tab {
+      padding: 6px 10px;
+      margin-right: 5px;
+      background: #d1d1d1;
+      color: #333;
+      border-radius: 5px 5px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.3s;
+    }
+    .tab img {
+      height: 14px;
+      margin-right: 5px;
+    }
+    .tab:hover { background: #bcbcbc; }
+    .tab.active {
+      background: #ffffff;
+      color: #000;
+      font-weight: bold;
+      border-bottom: 2px solid #4285f4;
+    }
+
+    /* Navigation bar */
+    #nav-bar {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background-color: #e0e0e0;
+      border-bottom: 1px solid #ccc;
+      height: 45px;
+      gap: 10px;
+    }
+    #url-bar {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 13px;
+      border: 1px solid #d0d0d0;
+      border-radius: 3px;
+    }
+    .nav-button {
+      padding: 6px;
+      font-size: 13px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .nav-button:hover { background-color: #357ae8; }
+
+    /* Bookmarks */
+    #bookmarks-list {
+      margin-top: 10px;
+      padding: 8px;
+      background-color: #f1f3f4;
+    }
+    
+    .bookmark-item { margin-bottom: 5px; font-size: 13px; }
+
+    /* Tab close button */
+    .tab-close {
+      margin-left: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #999;
+      transition: color 0.2s;
+    }
+    .tab-close:hover {
+      color: #f00;
+    }
+  </style>
+</head>
+<body>
+  <div id="tabs-bar"></div>
+
+  <div id="nav-bar">
+    <button class="nav-button" onclick="createTab()">New Tab</button>
+    <button class="nav-button" onclick="bookmark()">Bookmark</button>
+    <input type="text" id="url-bar" placeholder="Enter URL or search term" />
+    <button class="nav-button" onclick="navigate()">Go</button>
+  </div>
+
+  <div id="bookmarks-list"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    let currentTab = 0;
+
+    // Load Tabs function
+    function loadTabs(tabs) {
+      const tabsBar = document.getElementById('tabs-bar');
+      tabsBar.innerHTML = ''; // Clear existing tabs
+
+      tabs.forEach((tab, index) => {
+        const tabElement = document.createElement('div');
+        tabElement.className = `tab ${index === currentTab ? 'active' : ''}`;
+
+        // Create favicon image
+        const faviconImg = document.createElement('img');
+        faviconImg.src = tab.favicon; // Set favicon as src
+        faviconImg.style.height = '16px'; // Adjust icon size
+        faviconImg.style.marginRight = '5px';
+
+        // Create close button (X)
+        const closeButton = document.createElement('span');
+        closeButton.className = 'tab-close';
+        closeButton.innerHTML = 'X';
+        closeButton.onclick = (event) => {
+          event.stopPropagation(); // Prevent tab switch when clicking the close button
+          closeTab(index); // Close the tab when clicked
+        };
+
+        // Add favicon and title to the tab element
+        tabElement.appendChild(faviconImg);
+        tabElement.innerHTML += tab.title;
+
+        // Append the close button next to the title
+        tabElement.appendChild(closeButton);
+
+        // Handle tab click to switch to that tab
+        tabElement.onclick = () => switchTab(index);
+
+        // Append the tab element to the tabs bar
+        tabsBar.appendChild(tabElement);
+      });
+    }
+
+    // Load Bookmarks
+    function loadBookmarks(bookmarks) {
+      const bookmarksList = document.getElementById('bookmarks-list');
+      bookmarksList.innerHTML = '<strong>Bookmarks:</strong>';
+      bookmarks.forEach((bookmark) => {
+        const bookmarkItem = document.createElement('div');
+        bookmarkItem.className = 'bookmark-item';
+        bookmarkItem.textContent = bookmark;
+        bookmarksList.appendChild(bookmarkItem);
+      });
+    }
+
+    // IPC Renderer Events
+    function createTab() { ipcRenderer.send('new-tab'); }
+    function switchTab(index) { currentTab = index; ipcRenderer.send('switch-tab', index); }
+    function closeTab(index) { ipcRenderer.send('close-tab', index); }
+    function navigate() { ipcRenderer.send('navigate', document.getElementById('url-bar').value); }
+
+    // Function to bookmark the current tab
+    function bookmark() {
+      const activeTab = document.querySelector('.tab.active');
+      if (activeTab) {
+        const tabTitle = activeTab.innerText.replace('X', '').trim();
+        ipcRenderer.send('bookmark', tabTitle);
+      }
+    }
+
+    // Handle Tabs and Bookmarks Updates
+    ipcRenderer.on('tabs-updated', (event, tabs) => loadTabs(tabs));
+    ipcRenderer.on('bookmarks-updated', (event, bookmarks) => loadBookmarks(bookmarks));
+  </script>
+</body>
+</html>

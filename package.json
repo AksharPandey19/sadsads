@@ -1,0 +1,36 @@
+{
+  "name": "horizon-browser",
+  "version": "1.0.0",
+  "main": "main.js",
+  "description": "A custom-built browser using Electron by Akshar",
+  "author": "Akshar Pandey",
+  "license": "ISC",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^24.3.0"
+  },
+ "build": {
+  "appId": "com.example.horizonbrowser",
+  "productName": "Horizon Browser",
+  "directories": {
+    "output": "dist"
+  },
+  "files": [
+    "main.js",
+    "index.html",
+    "node_modules/"
+  ],
+  "mac": {
+    "icon": "assets/icon.icns",
+    "target": [
+      "dmg",
+      "zip"
+    ]
+  }
+}
+
+}
