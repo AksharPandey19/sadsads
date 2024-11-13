@@ -1,0 +1,60 @@
+version: 2.1
+
+executors:
+  macos-executor:
+    docker:
+      - image: circleci/python:3.9  # You can use a base image that includes Node.js
+    macos:
+      xcode: "12.5.0"  # You can update the Xcode version as required
+
+jobs:
+  install_dependencies:
+    docker:
+      - image: circleci/python:3.9  # Add a Node.js version compatible with your project
+    macos:
+      xcode: "12.5.0"
+    steps:
+      - checkout
+      - run:
+          name: Install Homebrew
+          command: |
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      - run:
+          name: Install Node.js
+          command: |
+            brew install node
+      - run:
+          name: Install npm dependencies
+          command: npm install
+
+  build:
+    macos:
+      xcode: "12.5.0"
+    steps:
+      - checkout
+      - run:
+          name: Build Electron App for macOS
+          command: npm run build -- --mac  # This will trigger your electron-builder macOS build
+
+  deploy:
+    macos:
+      xcode: "12.5.0"
+    steps:
+      - checkout
+      - run:
+          name: Deploy build artifact (optional)
+          command: |
+            # For example, you could upload to an S3 bucket or GitHub Releases
+            echo "Deploy step goes here."
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - install_dependencies
+      - build:
+          requires:
+            - install_dependencies
+      - deploy:
+          requires:
+            - build
