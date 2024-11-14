@@ -37,7 +37,6 @@ jobs:
       - run:
           name: Deploy build artifact (optional)
           command: |
-            # Example: Upload to an S3 bucket or GitHub Releases
             echo "Deploy step goes here."
 
 workflows:
